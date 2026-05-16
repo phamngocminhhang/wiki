@@ -1,0 +1,25 @@
+{
+
+    "BOOK_CACHE_DIR": "book_cache",
+
+    "BOOK_QUEUE_FILE": "books_queue.json",
+
+    "DAILY_LIMIT_FILE": "daily_limit.json",
+
+    "WAIT_TIME_PER_CHAPTER": 1.5,
+
+    "MAX_CHAPTERS_PER_DAY": 380,
+
+    "BROWSER_HEADLESS": true,
+
+    "EXTRA_WAIT_AFTER_PAGE_LOAD": 23,
+
+    "CHAPTER_LIST_REFRESH_HOURS": 24,
+
+    "FORCE_REFRESH_CHAPTER_LIST": false,
+
+    "BASE_URL": "https://wikicv.net",
+
+    "MONGO_URI": "mongodb+srv://dbUser:Rmit1234_@cluster0.uyfgear.mongodb.net/?appName=Cluster0"
+
+}

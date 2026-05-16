@@ -1,0 +1,28 @@
+{
+  "books": [
+    {
+      "book_url": "https://wikicv.net/truyen/vo-phap-danh-dau-nang-aOnXBDzLche51x4A",
+      "status": "done",
+      "added_at": "2026-05-15T09:00:51.263822",
+      "title": "Vô pháp đánh dấu nàng",
+      "author": "Hạ Xán Thời",
+      "cover_url": "https://wikicv.net/photo/69c5239154b8087150e69ad2?o=1",
+      "total_chapters": 214,
+      "downloaded_chapters": 214,
+      "epub_path": null,
+      "error": null
+    },
+    {
+      "book_url": "https://wikicv.net/truyen/vo-han-tu-tien-nguoi-choi-abVTmVS4CCB6pFhH",
+      "status": "queued",
+      "added_at": "2026-05-15T09:01:46.333133",
+      "title": "Vô hạn tu tiên người chơi",
+      "author": "Chính Nguyệt Sơ Tứ",
+      "cover_url": "https://wikicv.net/photo/69b5539954b808207aa45846?o=1",
+      "total_chapters": 668,
+      "downloaded_chapters": 0,
+      "epub_path": null,
+      "error": null
+    }
+  ]
+}

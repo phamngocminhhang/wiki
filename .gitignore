@@ -1,0 +1,80 @@
+# Python
+
+__pycache__/
+
+*.py[cod]
+
+*$py.class
+
+
+# Virtual environments
+
+venv/
+
+.env/
+
+.venv/
+
+env/
+
+ENV/
+
+
+# Pyenv
+
+.python-version
+
+
+# IDE
+
+.vscode/
+
+.idea/
+
+
+# OS
+
+.DS_Store
+
+Thumbs.db
+
+
+# Logs
+
+*.log
+
+
+# Build
+
+build/
+
+dist/
+
+*.egg-info/
+
+
+# pytest
+
+.pytest_cache/
+
+
+# mypy
+
+.mypy_cache/
+
+
+# Coverage
+
+.coverage
+
+htmlcov/
+
+
+# Jupyter
+
+.ipynb_checkpoints/
+
+
+# dotenv
+
+.env.local
