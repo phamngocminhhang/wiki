@@ -14,13 +14,13 @@
     },
     {
       "book_url": "https://wikicv.net/truyen/vo-han-tu-tien-nguoi-choi-abVTmVS4CCB6pFhH",
-      "status": "queued",
+      "status": "paused",
       "added_at": "2026-05-15T09:01:46.333133",
       "title": "Vô hạn tu tiên người chơi",
       "author": "Chính Nguyệt Sơ Tứ",
       "cover_url": "https://wikicv.net/photo/69b5539954b808207aa45846?o=1",
-      "total_chapters": 668,
-      "downloaded_chapters": 0,
+      "total_chapters": 501,
+      "downloaded_chapters": 380,
       "epub_path": null,
       "error": null
     }
