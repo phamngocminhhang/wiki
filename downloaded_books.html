@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Wiki Scraper</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#18181a;--bg2:#232326;--bg3:#2c2c30;--bg4:#38383d;
+  --text:#f0f0ee;--text2:#a0a09e;--text3:#606060;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --green:#1D9E75;--green-dim:#0f5c44;
+  --amber:#EF9F27;--amber-bg:#2a1f08;--amber-text:#EF9F27;
+  --red:#E24B4A;
+  --done-bg:#0e2e1a;--done-text:#5DC98A;
+  --paused-bg:#2a1f08;--paused-text:#EF9F27;
+  --queued-bg:#2c2c30;--queued-text:#888;
+  --prog-bg:#2c2c30;
+  --error-bg:#2e0f0f;--error-text:#F09595;
+  --r:10px;--r-sm:7px;
+}
+@media(prefers-color-scheme:light){
+  :root{
+    --bg:#f2f2f0;--bg2:#fff;--bg3:#eaeae6;--bg4:#d8d8d4;
+    --text:#1a1a18;--text2:#6a6a66;--text3:#aaa;
+    --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.16);
+    --done-bg:#eaf3de;--done-text:#27500a;
+    --paused-bg:#faeeda;--paused-text:#633806;
+    --queued-bg:#ebebea;--queued-text:#666;
+    --prog-bg:#e0e0dc;
+    --error-bg:#fcebeb;--error-text:#791f1f;
+    --amber-bg:#faeeda;--amber-text:#854F0B;
+  }
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;min-height:100vh}
+.page{max-width:540px;margin:0 auto;padding:20px 14px 60px;position:relative}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.topbar h1{font-size:16px;font-weight:500}
+.topbar .sub{font-size:12px;color:var(--text3);margin-top:2px}
+.run-btn{display:flex;align-items:center;gap:6px;height:32px;padding:0 14px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-size:13px;cursor:pointer;font-family:inherit}
+.run-btn:hover{background:var(--bg4)}
+.run-btn:active{transform:scale(0.97)}
+.run-btn:disabled{opacity:0.5;cursor:not-allowed}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pl 1.4s infinite;flex-shrink:0}
+@keyframes pl{0%,100%{opacity:1}50%{opacity:0.15}}
+
+.limit-box{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:14px}
+.limit-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.limit-top-label{font-size:12px;color:var(--text2)}
+.limit-top-nums{font-size:13px;font-weight:500}
+.n-used{color:var(--green)}
+.n-sep{color:var(--text3);margin:0 1px}
+.n-total{color:var(--text2)}
+.track{height:4px;background:var(--prog-bg);border-radius:2px;overflow:hidden;margin-bottom:8px}
+.track-fill{height:100%;border-radius:2px;background:var(--green);transition:width .4s}
+.track-fill.warn{background:var(--amber)}
+.track-fill.full{background:var(--red)}
+.limit-bottom{display:flex;gap:16px}
+.lchip{font-size:11px;color:var(--text3)}
+.lchip b{color:var(--text2);font-weight:500}
+.lchip.urgent b{color:var(--amber-text)}
+
+.add-box{display:flex;gap:8px;margin-bottom:18px}
+.add-box input{flex:1;min-width:0;height:42px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--r-sm);padding:0 14px;font-size:14px;color:var(--text);outline:none;font-family:inherit}
+.add-box input:focus{border-color:var(--green)}
+.add-box input::placeholder{color:var(--text3)}
+.add-btn{height:42px;padding:0 20px;background:var(--text);color:var(--bg);border:none;border-radius:var(--r-sm);font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:inherit}
+.add-btn:hover{opacity:0.87}
+.add-btn:active{transform:scale(0.97)}
+
+.sec-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sec-label{font-size:12px;font-weight:500;color:var(--text2);letter-spacing:0.04em}
+.sec-count{font-size:12px;color:var(--text3)}
+
+.queue{display:flex;flex-direction:column;gap:8px}
+.empty{text-align:center;padding:40px 16px;font-size:13px;color:var(--text3);border:0.5px dashed var(--border2);border-radius:var(--r)}
+
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color .15s}
+.card.drag-over{border-color:var(--green)}
+.card.dragging{opacity:0.28}
+
+.card-top{display:flex;align-items:center;gap:10px;padding:12px 12px 0}
+.grip{font-size:16px;color:var(--text3);cursor:grab;user-select:none;flex-shrink:0}
+.grip.locked{cursor:default;opacity:0.12}
+.grip:active{cursor:grabbing}
+.info{flex:1;min-width:0}
+.book-title{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.book-author{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-actions{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+
+.badge{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;display:inline-block}
+.b-done{background:var(--done-bg);color:var(--done-text)}
+.b-paused{background:var(--paused-bg);color:var(--paused-text)}
+.b-queued{background:var(--queued-bg);color:var(--queued-text)}
+.b-in_progress{background:#0d2236;color:#5DAFF4}
+@media(prefers-color-scheme:light){.b-in_progress{background:#E6F1FB;color:#0C447C}}
+.b-error{background:var(--error-bg);color:var(--error-text)}
+
+.more-btn{height:26px;padding:0 10px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:6px;color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit}
+.more-btn:hover{background:var(--bg4)}
+
+.prog-row{display:flex;align-items:center;gap:8px;padding:8px 12px 12px 38px}
+.prog-bar{flex:1;height:3px;background:var(--prog-bg);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;background:var(--green)}
+.prog-txt{font-size:12px;color:var(--text2);white-space:nowrap;min-width:88px;text-align:right}
+
+.detail{border-top:0.5px solid var(--border);padding:12px}
+.stats-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.sc{background:var(--bg3);border-radius:var(--r-sm);padding:10px 10px 8px}
+.sc-val{font-size:22px;font-weight:500;color:var(--text)}
+.sc-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+.sc.warn .sc-val{color:var(--amber-text)}
+.meta-line{font-size:12px;color:var(--text2);margin-bottom:4px}
+.meta-line span{color:var(--text)}
+.err-box{font-size:12px;color:var(--error-text);background:var(--error-bg);padding:7px 10px;border-radius:6px;margin-top:6px}
+.det-acts{display:flex;gap:6px;margin-top:12px}
+.det-btn{height:30px;padding:0 12px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--text)}
+.det-btn:hover{background:var(--bg4)}
+.det-btn.dl{color:var(--done-text);border-color:var(--green-dim)}
+.det-btn.rm{color:var(--error-text);border-color:rgba(226,75,74,0.3)}
+
+.status-bar{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:10px 14px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r)}
+.sb-left{font-size:12px;color:var(--text3)}
+.sb-left b{color:var(--text2);font-weight:500}
+.sb-right{font-size:12px;color:var(--text3)}
+
+.toast{position:absolute;bottom:0;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:9px 18px;border-radius:var(--r-sm);font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;z-index:10}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="topbar">
+  <div>
+    <h1>Wiki Scraper</h1>
+    <div class="sub">wikicv.net · auto-runs 7 AM daily</div>
+  </div>
+</div>
+
+<div class="sec-row">
+  <span class="sec-label">Downloaded books</span>
+  <span class="sec-count" id="secCount"></span>
+</div>
+<div class="queue" id="queue">
+  <div class="empty" id="emptyMsg">No items in queue — paste a URL above to start scraping.</div>
+</div>
+
+<div class="status-bar">
+  <div class="sb-left" id="sbLeft">Status: <b>idle</b></div>
+  <div class="sb-right" id="sbRight"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+// Dynamically construct API URL based on current domain
+// const API = `http://localhost:8765/api`;
+const API = `http://localhost:8765/api`;
+let books = [];
+let daily = {used:0, limit:50, remaining:50};
+let isScraping = false;
+let expanded = null;
+let dragFrom = null;
+
+const $ = id => document.getElementById(id);
+const slug = url => url.replace(/\/$/, '').split('/').pop();
+
+function toast(msg, dur=2500) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), dur);
+}
+
+function nextRunIn() {
+  const now = new Date(), next = new Date();
+  next.setHours(7,0,0,0);
+  if (now >= next) next.setDate(next.getDate()+1);
+  const ms = next - now;
+  const h = Math.floor(ms/3600000), m = Math.floor((ms%3600000)/60000);
+  return h > 0 ? `in ${h}h ${m}m` : `in ${m}m`;
+}
+
+function updateLimit() {
+  const {used, limit, remaining} = daily;
+  const pct = Math.min(Math.round((used/limit)*100), 100);
+  $('limUsed').textContent = used;
+  $('limTotal').textContent = limit;
+  $('chipN').textContent = remaining;
+  const fill = $('limFill');
+  fill.style.width = pct + '%';
+  fill.className = 'track-fill' + (pct >= 100 ? ' full' : pct >= 70 ? ' warn' : '');
+  const chipLeft = $('chipLeft');
+  const chipReset = $('chipReset');
+  if (remaining <= 0) {
+    chipLeft.style.display = 'none';
+    chipReset.style.display = 'block';
+  } else {
+    chipLeft.style.display = 'block';
+    chipReset.style.display = 'none';
+    chipLeft.className = 'lchip' + (remaining < 10 ? ' urgent' : '');
+  }
+  $('runPulse').style.display = isScraping ? 'block' : 'none';
+  if (isScraping) {
+    $('sbLeft').innerHTML = 'Status: <b style="color:#5DAFF4">downloading...</b>';
+    $('sbRight').textContent = '';
+  } else if (remaining <= 0) {
+    $('sbLeft').innerHTML = 'Status: <b style="color:var(--amber-text)">daily limit reached</b>';
+    $('sbRight').textContent = 'resumes ' + nextRunIn();
+  } else {
+    $('sbLeft').innerHTML = 'Status: <b>idle</b>';
+    $('sbRight').textContent = 'next run ' + nextRunIn();
+  }
+}
+
+function badge(status) {
+  const lbl = {queued:'Queued',in_progress:'Downloading',paused:'Paused',done:'Done',error:'Error'};
+  return `<span class="badge b-${status}">${lbl[status]||status}</span>`;
+}
+
+function render() {
+  const q = $('queue');
+  const active = books.filter(b => b.status !== 'cancelled');
+  $('emptyMsg').style.display = active.length ? 'none' : 'block';
+  $('secCount').textContent = active.length ? active.length + (active.length === 1 ? ' item' : ' items') : '';
+
+  q.querySelectorAll('.card').forEach(c => c.remove());
+
+  active.forEach(b => {
+    const s = slug(b.book_url);
+    const total = b.total_chapters || 0;
+    const done = b.downloaded_chapters || 0;
+    const left = Math.max(0, total - done);
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const isDone = b.status === 'done';
+    const isExp = expanded === s;
+    const canDrag = !isDone && b.status !== 'in_progress';
+    const title = b.title || slug(b.book_url).replace(/-/g,' ');
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.url = b.book_url;
+
+    if (canDrag) {
+      card.draggable = true;
+      card.addEventListener('dragstart', e => {
+        dragFrom = books.findIndex(x => x.book_url === b.book_url);
+        setTimeout(() => card.classList.add('dragging'), 0);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        q.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
+      });
+      card.addEventListener('dragover', e => { e.preventDefault(); card.classList.add('drag-over'); });
+      card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+      card.addEventListener('drop', e => {
+        e.preventDefault();
+        card.classList.remove('drag-over');
+        const to = books.findIndex(x => x.book_url === b.book_url);
+        if (dragFrom === null || dragFrom === to) return;
+        const [mv] = books.splice(dragFrom, 1);
+        books.splice(to, 0, mv);
+        dragFrom = null;
+        saveOrder();
+        render();
+      });
+    }
+
+    const det = isExp ? `
+      <div class="detail">
+        <div class="stats-grid">
+          <div class="sc"><div class="sc-val">${total||'—'}</div><div class="sc-lbl">Total chapters</div></div>
+          <div class="sc"><div class="sc-val">${done}</div><div class="sc-lbl">Downloaded</div></div>
+          <div class="sc${left > 0 ? ' warn' : ''}"><div class="sc-val">${left}</div><div class="sc-lbl">Remaining</div></div>
+          <div class="sc"><div class="sc-val">${pct}%</div><div class="sc-lbl">Progress</div></div>
+        </div>
+        ${b.author ? `<div class="meta-line">Author: <span>${b.author}</span></div>` : ''}
+        <div class="meta-line" style="word-break:break-all;font-size:11px">URL: <a href="${b.book_url}" target="_blank">${b.book_url}</a></div>
+        ${b.error ? `<div class="err-box">${b.error}</div>` : ''}
+        <div class="det-acts">
+          ${done > 0 ? `<button class="det-btn dl" onclick="dlEpub('${s}')">Download EPUB</button>` : ''}
+          <button class="det-btn" onclick="refreshChapters('${s}', this)" style="color:var(--amber-text);border-color:var(--amber)">🔄 Refresh chapters</button>
+          <button class="det-btn rm" onclick="rmBook('${encodeURIComponent(b.book_url)}')">Remove</button>
+        </div>
+      </div>` : '';
+
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="grip${canDrag?'':' locked'}">⠿</div>
+        <div class="info">
+          <div class="book-title">${title}</div>
+          <div class="book-author">${b.author||'—'}</div>
+        </div>
+        <div class="card-actions">
+          ${badge(b.status)}
+          <button class="more-btn" onclick="toggle('${s}')">${isExp?'less ▲':'more ▼'}</button>
+        </div>
+      </div>
+      <div class="prog-row">
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+        <div class="prog-txt">${done} / ${total>0?total:'?'} · ${pct}%</div>
+      </div>
+      ${det}
+    `;
+    q.appendChild(card);
+  });
+}
+
+function toggle(s) { expanded = expanded === s ? null : s; render(); }
+
+
+
+function rmBook(enc) {
+  const url = decodeURIComponent(enc);
+  const s = slug(url);
+  fetch(`${API}/books/${s}`, {method:'DELETE'}).catch(()=>{});
+  books = books.filter(b => b.book_url !== url);
+  if (expanded === s) expanded = null;
+  render();
+  toast('Removed');
+}
+
+function dlEpub(s) { window.open(`${API}/books/${s}/download`, '_blank'); }
+
+async function refreshChapters(s, btn) {
+  try {
+    btn.disabled = true;
+    btn.textContent = '⟳ Refreshing...';
+
+    const r = await fetch(`${API}/books/${s}/refresh-chapters`);
+    const d = await r.json();
+
+    if (r.ok) {
+      toast(`✓ ${d.message}`);
+      poll();
+    } else {
+      toast(`Error: ${d.detail || 'Failed to refresh'}`);
+    }
+  } catch (e) {
+    toast('Backend not reachable');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 Refresh chapters';
+  }
+}
+
+async function saveOrder() {
+  try {
+    await fetch(`${API}/books/reorder`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ordered_urls: books.map(b => b.book_url)})
+    });
+  } catch {}
+}
+
+async function triggerNow() {
+  const btn = $('runBtn');
+  btn.disabled = true;
+  try {
+    const r = await fetch(`${API}/run-now`, {method:'POST'});
+    const d = await r.json();
+    toast(d.message || 'Started');
+    setTimeout(poll, 1000);
+  } catch { toast('Backend not reachable'); }
+  setTimeout(() => btn.disabled=false, 3000);
+}
+
+async function poll() {
+  try {
+    const [br, sr] = await Promise.all([fetch(`${API}/downloaded/books`), fetch(`${API}/status`)]);
+    if (!br.ok || !sr.ok) return;
+    const bd = await br.json();
+    const sd = await sr.json();
+    books = bd.books || [];
+    daily = sd.daily || daily;
+    isScraping = sd.is_scraping || false;
+    render();
+  } catch {}
+}
+
+poll();
+setInterval(poll, 10000);
+</script>
+</body>
+</html>

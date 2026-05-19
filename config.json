@@ -4,6 +4,8 @@
 
     "BOOK_QUEUE_FILE": "books_queue.json",
 
+    "BOOK_DOWNLOADED_FILE": "downloaded_books.json",
+
     "DAILY_LIMIT_FILE": "daily_limit.json",
 
     "WAIT_TIME_PER_CHAPTER": 1.5,
